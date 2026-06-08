@@ -1,19 +1,24 @@
 import {
   collection,
   doc,
+  query,
+  where,
+  orderBy,
+  limit,
   setDoc,
   getDoc,
+  getDocs,
   serverTimestamp
 } from "firebase/firestore";
 
 import { db } from "@/firebase";
 
-
 export async function createPaste({
   title,
   content,
   crypto = null,
-  expiresAt = null
+  expiresAt = null,
+  private: isPrivate = false
 }) {
   const ref = doc(collection(db, "pastes"));
 
@@ -21,6 +26,7 @@ export async function createPaste({
     title: title.trim() || "Untitled",
     content,
     crypto,
+    private: isPrivate,
     createdAt: serverTimestamp(),
     expiresAt
   });
@@ -45,6 +51,26 @@ export async function getPaste(id) {
     id: snap.id,
     ...data
   };
+}
+
+export async function getRecentPastes() {
+  const q = query(
+    collection(db, "pastes"),
+    where("private", "==", false),
+    orderBy("createdAt", "desc"),
+    limit(5)
+  );
+
+  const snapshot = await getDocs(q);
+
+  const now = Date.now();
+
+  return snapshot.docs
+    .map(doc => ({
+      id: doc.id,
+      ...doc.data()
+    }))
+    .filter(paste => !paste.expiresAt || paste.expiresAt.toMillis() > now);
 }
 
 function toBase64(buffer) {
