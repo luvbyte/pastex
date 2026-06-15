@@ -19,10 +19,6 @@
   border-bottom-right-radius: 0;
 }
 
-.full {
-  @apply w-full h-full
-}
-
 .fscreen {
   @apply w-full h-full
 }
