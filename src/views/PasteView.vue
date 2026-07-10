@@ -59,7 +59,7 @@
       </div>
     </div>
     <!-- Content -->
-    <div v-else class="flex-1 flex flex-col">
+    <div v-else class="flex-1 flex flex-col overflow-y-auto">
       <div class="border p-2 bg-base-200 rounded border-base-content/20">
         <h1 class="px-1 text-2xl truncate">{{ paste.title }}</h1>
         <div class="flex gap-2 items-center">
@@ -141,7 +141,9 @@
           </div>
         </div>
       </div>
-      <div class="flex-1 flex flex-col border rounded border-base-content/20">
+      <div
+        class="flex-1 flex flex-col border rounded border-base-content/20 overflow-y-auto"
+      >
         <div
           class="p-2 bg-base-200 rounded-t flex items-center justify-between gap-2"
         >
@@ -181,12 +183,46 @@
             >
               Share
             </button>
+            <button class="btn btn-xs btn-info" @click="isMarked = !isMarked">
+              <svg
+                v-if="isMarked"
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+              >
+                <path d="M0 0h24v24H0z" fill="none" />
+                <path
+                  fill="currentColor"
+                  d="M20.516 5.871H3.452C2.677 5.871 2 6.516 2 7.323v9.387c0 .742.645 1.42 1.452 1.42h17.096c.775 0 1.452-.646 1.452-1.453V7.258c-.032-.774-.677-1.387-1.484-1.387M21 16.71a.496.496 0 0 1-.484.484H3.452a.496.496 0 0 1-.484-.484V7.258c0-.258.226-.484.484-.484h17.096c.259 0 .484.226.484.484v9.42H21z"
+                />
+                <path
+                  fill="currentColor"
+                  d="M17.839 8.71h-1.903v3.355h-1.968l2.903 3.193l2.871-3.193H17.84zM8.71 11.13L6.805 8.71H4.871v6.548h1.935v-3.774l1.903 2.387l1.904-2.387v3.774h1.967V8.71h-1.967z"
+                />
+              </svg>
+              <svg
+                v-else
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+              >
+                <path d="M0 0h24v24H0z" fill="none" />
+                <path
+                  fill="currentColor"
+                  d="M21 6v2H3V6zM3 18h9v-2H3zm0-5h18v-2H3z"
+                />
+              </svg>
+            </button>
           </div>
         </div>
 
+        <TextArea v-if="isMarked" :content="paste.content" />
         <textarea
+          v-else
           readonly
-          class="p-2 flex-1 w-full textarea resize-none focus:outline-none"
+          class="p-1 flex-1 w-full textarea overflow-y-auto resize-none focus:outline-none"
           >{{ paste.content }}</textarea
         >
       </div>
@@ -201,12 +237,15 @@
   import { getPaste, decryptText, formatTextSize } from "@/api";
 
   import Loading from "@/components/Loading.vue";
+  import TextArea from "@/components/TextArea.vue";
 
   const route = useRoute();
   const router = useRouter();
 
   const loading = ref(true);
   const toggleRaw = ref(false);
+
+  const isMarked = ref(true);
 
   const password = ref("");
   const error = ref("");
