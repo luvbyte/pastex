@@ -5,11 +5,25 @@
       <p class="text-base-content/70">Paste text. Share instantly.</p>
     </div>
     <div class="opacity-60 divider">New paste</div>
-    <div>
+    <div class="relative">
       <textarea
         v-model="content"
         class="textarea h-72 w-full focus:outline-none"
       ></textarea>
+
+      <label
+        for="file-upload"
+        class="btn btn-sm btn-outline absolute top-2 right-2 opacity-60"
+      >
+        Upload File
+      </label>
+
+      <input
+        id="file-upload"
+        type="file"
+        class="hidden"
+        @change="handleFileUpload"
+      />
     </div>
     <div class="opacity-60 divider">Options</div>
 
@@ -36,26 +50,6 @@
         />
       </div>
 
-      <!-- Expiry -->
-      <div class="flex gap-2 items-center">
-        <label class="w-24">Expires</label>
-
-        <select
-          v-model="expiry"
-          class="select select-sm w-full placeholder:opacity-60 focus:outline-none"
-        >
-          <option value="">Never</option>
-
-          <option value="1h">1 Hour</option>
-
-          <option value="1d">1 Day</option>
-
-          <option value="7d">7 Days</option>
-
-          <option value="30d">30 Days</option>
-        </select>
-      </div>
-
       <!-- Private -->
       <div class="flex gap-2 items-center">
         <label class="w-24">Private</label>
@@ -76,7 +70,7 @@
         </span>
       </div>
 
-      <span v-if="error" class="text-error text-sm">Error</span>
+      <span v-if="error" class="text-error text-sm">{{ error }}</span>
 
       <!-- Submit -->
       <button
@@ -144,7 +138,6 @@
   import {
     createPaste as createPasteDoc,
     encryptText,
-    getExpiryDate,
     getRecentPastes
   } from "@/api";
 
@@ -155,7 +148,6 @@
   const title = ref("");
   const content = ref("");
   const password = ref("");
-  const expiry = ref("");
   const isPrivate = ref(false);
 
   const pasteUrl = ref("");
@@ -190,7 +182,6 @@
         title: title.value || "Untitled",
         content: finalContent,
         crypto: cryptoData,
-        expiresAt: getExpiryDate(expiry.value),
         private: isPrivate.value
       });
 
@@ -200,6 +191,37 @@
       console.error(error);
     } finally {
       loading.value = false;
+    }
+  }
+
+  const MAX_FILE_SIZE = 1024 * 1024; // 1 MB
+
+  async function handleFileUpload(event) {
+    const file = event.target.files?.[0];
+    if (!file) return;
+
+    if (file.size > MAX_FILE_SIZE) {
+      error.value = "File size must not exceed 1 MB.";
+      event.target.value = "";
+      return;
+    }
+
+    try {
+      const text = await file.text();
+
+      content.value = text;
+
+      if (!title.value.trim()) {
+        title.value = file.name;
+      }
+
+      error.value = null;
+    } catch (err) {
+      console.error(err);
+      error.value =
+        "Unable to read this file. It may be a binary file (e.g. image, video, PDF, or executable).";
+    } finally {
+      event.target.value = "";
     }
   }
 

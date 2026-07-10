@@ -17,7 +17,6 @@ export async function createPaste({
   title,
   content,
   crypto = null,
-  expiresAt = null,
   private: isPrivate = false
 }) {
   const ref = doc(collection(db, "pastes"));
@@ -27,8 +26,7 @@ export async function createPaste({
     content,
     crypto,
     private: isPrivate,
-    createdAt: serverTimestamp(),
-    expiresAt
+    createdAt: serverTimestamp()
   });
 
   return ref.id;
@@ -42,10 +40,6 @@ export async function getPaste(id) {
   }
 
   const data = snap.data();
-
-  if (data.expiresAt && data.expiresAt.toMillis() < Date.now()) {
-    return null;
-  }
 
   return {
     id: snap.id,
@@ -63,14 +57,10 @@ export async function getRecentPastes() {
 
   const snapshot = await getDocs(q);
 
-  const now = Date.now();
-
-  return snapshot.docs
-    .map(doc => ({
-      id: doc.id,
-      ...doc.data()
-    }))
-    .filter(paste => !paste.expiresAt || paste.expiresAt.toMillis() > now);
+  return snapshot.docs.map(doc => ({
+    id: doc.id,
+    ...doc.data()
+  }));
 }
 
 function toBase64(buffer) {
@@ -165,27 +155,6 @@ export async function decryptText(encryptedText, password, cryptoData) {
   );
 
   return new TextDecoder().decode(decrypted);
-}
-
-export function getExpiryDate(value) {
-  const now = Date.now();
-
-  switch (value) {
-    case "1h":
-      return new Date(now + 60 * 60 * 1000);
-
-    case "1d":
-      return new Date(now + 24 * 60 * 60 * 1000);
-
-    case "7d":
-      return new Date(now + 7 * 24 * 60 * 60 * 1000);
-
-    case "30d":
-      return new Date(now + 30 * 24 * 60 * 60 * 1000);
-
-    default:
-      return null;
-  }
 }
 
 export function formatTextSize(text = "") {
