@@ -60,6 +60,36 @@
         </div>
       </div>
 
+      <div class="flex gap-2 items-center">
+        <div class="w-24">Format</div>
+        <div class="join w-full">
+          <input
+            v-model="format"
+            class="join-item btn btn-sm w-20"
+            type="radio"
+            name="format"
+            value="mark"
+            aria-label="Markdown"
+          />
+          <input
+            v-model="format"
+            class="join-item btn btn-sm w-20"
+            type="radio"
+            name="format"
+            value="code"
+            aria-label="Code"
+          />
+          <input
+            v-model="format"
+            class="join-item btn btn-sm w-20"
+            type="radio"
+            name="format"
+            value="text"
+            aria-label="Text"
+          />
+        </div>
+      </div>
+
       <!-- Stats -->
       <div class="flex gap-4 text-sm opacity-70">
         <span>{{ content.length }} chars</span>
@@ -149,6 +179,7 @@
   const content = ref("");
   const password = ref("");
   const isPrivate = ref(false);
+  const format = ref("text");
 
   const pasteUrl = ref("");
 
@@ -182,7 +213,8 @@
         title: title.value || "Untitled",
         content: finalContent,
         crypto: cryptoData,
-        private: isPrivate.value
+        private: isPrivate.value,
+        format: format.value
       });
 
       router.push(id);

@@ -152,9 +152,9 @@
             >
               Share
             </button>
-            <button class="btn btn-xs btn-info" @click="isMarked = !isMarked">
+            <button class="btn btn-xs btn-info btn-soft" @click="toggleFormat">
               <svg
-                v-if="isMarked"
+                v-if="paste.format === 'mark'"
                 xmlns="http://www.w3.org/2000/svg"
                 width="18"
                 height="18"
@@ -171,7 +171,26 @@
                 />
               </svg>
               <svg
-                v-else
+                v-if="paste.format === 'code'"
+                xmlns="http://www.w3.org/2000/svg"
+                width="18"
+                height="18"
+                viewBox="0 0 24 24"
+              >
+                <path d="M0 0h24v24H0z" fill="none" />
+                <path
+                  fill="currentColor"
+                  d="M16.443 7.328a.75.75 0 0 1 1.059-.056l1.737 1.564c.737.663 1.347 1.212 1.767 1.71c.44.525.754 1.088.754 1.784c0 .695-.313 1.258-.754 1.782c-.42.499-1.03 1.049-1.767 1.711l-1.737 1.564a.75.75 0 1 1-1.004-1.115l1.697-1.527c.788-.709 1.319-1.19 1.663-1.598c.33-.393.402-.622.402-.817c0-.196-.072-.425-.402-.818c-.344-.409-.875-.889-1.663-1.598l-1.697-1.527a.75.75 0 0 1-.056-1.06m-8.94 1.06a.75.75 0 0 0-1.004-1.115L4.761 8.836c-.737.663-1.347 1.212-1.767 1.71c-.44.525-.754 1.088-.754 1.784c0 .695.313 1.258.754 1.782c.42.499 1.03 1.049 1.767 1.711l1.737 1.564a.75.75 0 1 0 1.004-1.115l-1.697-1.527c-.788-.709-1.319-1.19-1.663-1.598c-.33-.393-.402-.622-.402-.817c0-.196.072-.425.402-.818c.344-.409.875-.889 1.663-1.598z"
+                />
+                <path
+                  fill="currentColor"
+                  d="M14.182 4.276a.75.75 0 0 1 .53.918l-3.974 14.83a.75.75 0 1 1-1.449-.389l3.974-14.83a.75.75 0 0 1 .919-.53"
+                  opacity=".5"
+                />
+              </svg>
+
+              <svg
+                v-if="paste.format === 'text'"
                 xmlns="http://www.w3.org/2000/svg"
                 width="18"
                 height="18"
@@ -187,13 +206,17 @@
           </div>
         </div>
 
-        <TextArea v-if="isMarked" :content="paste.content" />
         <textarea
-          v-else
+          v-show="paste.format === 'text'"
           readonly
           class="p-1 flex-1 w-full textarea overflow-y-auto resize-none focus:outline-none"
           >{{ paste.content }}</textarea
         >
+        <TextArea
+          v-show="paste.format !== 'text'"
+          :content="paste.content"
+          :format="paste.format"
+        />
       </div>
     </div>
   </div>
@@ -222,6 +245,13 @@
   const paste = ref(null);
 
   const decrypted = ref(false);
+
+  const toggleFormat = () => {
+    const formats = ["mark", "code", "text"];
+    const currentIndex = formats.indexOf(paste.value.format);
+
+    paste.value.format = formats[(currentIndex + 1) % formats.length];
+  };
 
   const isEncrypted = computed(() => {
     return !!paste.value?.crypto;
@@ -276,16 +306,40 @@
   }
 
   function downloadPaste() {
-    const blob = new Blob([paste.value.content], { type: "text/plain" });
-
+    const blob = new Blob([paste.value.content], {
+      type: "application/octet-stream"
+    });
+    // const blob = new Blob([paste.value.content], { type: "text/plain" });
     const url = URL.createObjectURL(blob);
 
     const a = document.createElement("a");
 
+    const title = (paste.value.title || "UntitledPaste").trim();
+
+    // Check if the title already has a file extension
+    const hasExtension = /\.[^./\\]+$/.test(title);
+
+    let filename = title;
+
+    if (!hasExtension) {
+      switch (paste.value.format) {
+        case "mark":
+          filename += ".md";
+          break;
+        case "text":
+          filename += ".txt";
+          break;
+        case "code":
+        default:
+          // ""
+          break;
+      }
+    }
+
+    console.log(hasExtension, title, paste.value.format, filename);
+
     a.href = url;
-
-    a.download = `${paste.value.title || "paste"}.txt`;
-
+    a.download = filename;
     a.click();
 
     URL.revokeObjectURL(url);

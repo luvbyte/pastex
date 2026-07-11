@@ -17,7 +17,8 @@ export async function createPaste({
   title,
   content,
   crypto = null,
-  private: isPrivate = false
+  private: isPrivate = false,
+  format = "mark"
 }) {
   const ref = doc(collection(db, "pastes"));
 
@@ -26,7 +27,8 @@ export async function createPaste({
     content,
     crypto,
     private: isPrivate,
-    createdAt: serverTimestamp()
+    createdAt: serverTimestamp(),
+    format
   });
 
   return ref.id;
