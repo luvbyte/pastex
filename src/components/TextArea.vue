@@ -5,10 +5,7 @@
       class="markdown-body"
       v-html="renderedMarkdown"
     />
-
-    <pre v-else class="hljs rounded-lg p-1 overflow-x-auto text-sm">
-      <code v-html="highlightedCode"></code>
-    </pre>
+    <pre v-else class="hljs fscreen rounded-lg p-1 overflow-x-auto text-sm"><code v-html="highlightedCode"></code></pre>
   </div>
 </template>
 
